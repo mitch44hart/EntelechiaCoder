@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek Coder Interface (Friendli AI)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Tailwind gray-50 */
+        }
+        /* Style for the response box */
+        #responseDisplay {
+            white-space: pre-wrap; /* Preserve whitespace and wrap */
+            word-wrap: break-word; /* Break long words */
+            font-family: monospace; /* Use monospace font for code-like output */
+            background-color: #1f2937; /* Tailwind gray-800 */
+            color: #f3f4f6; /* Tailwind gray-100 */
+            border-radius: 0.375rem; /* Tailwind rounded-md */
+            padding: 1rem; /* Tailwind p-4 */
+            min-height: 150px; /* Increased min height */
+            overflow-x: auto; /* Add horizontal scroll if needed */
+            border: 1px solid #374151; /* Tailwind gray-700 */
+        }
+         /* Style for the prompt input box */
+        #promptInput {
+            font-family: monospace; /* Use monospace font for code prompts */
+            font-size: 0.875rem; /* Tailwind text-sm */
+             min-height: 100px;
+        }
+        /* Style for header input pairs (less prominent) */
+        .header-pair {
+            display: flex;
+            gap: 0.5rem; /* Tailwind space-x-2 */
+            margin-bottom: 0.5rem; /* Tailwind mb-2 */
+        }
+        .header-pair input {
+            flex-grow: 1;
+            font-size: 0.875rem; /* Smaller font for headers */
+            padding: 0.5rem; /* Smaller padding */
+        }
+         .remove-header-btn {
+             padding: 0.5rem;
+             color: #9ca3af; /* Gray-400 */
+             background-color: transparent;
+             border: none;
+             border-radius: 0.375rem;
+             cursor: pointer;
+             font-weight: bold;
+             line-height: 1;
+        }
+        .remove-header-btn:hover {
+             color: #dc2626; /* Red-600 */
+             background-color: #fee2e2; /* Red-100 */
+        }
+        /* Hide remove button for default headers if needed */
+        .default-header .remove-header-btn {
+            /* display: none; */ /* Uncomment to hide remove for default */
+        }
+        /* Simple toggle for details */
+        details > summary {
+            cursor: pointer;
+            font-weight: 500; /* Medium weight */
+            color: #4b5563; /* Gray-600 */
+            margin-bottom: 0.5rem;
+        }
+        details > summary:hover {
+            color: #1f2937; /* Gray-800 */
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-md">
+
+        <h1 class="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">DeepSeek Coder Interface</h1>
+
+        <details class="mb-4 bg-gray-50 p-3 rounded-md border border-gray-200">
+            <summary class="text-sm">API Configuration (Friendli AI)</summary>
+            <div class="mt-3 space-y-3">
+                <div>
+                    <label for="endpointUrl" class="block text-xs font-medium text-gray-600 mb-1">Endpoint URL</label>
+                    <input type="url" id="endpointUrl" name="endpointUrl" value="https://api.friendli.ai/dedicated" class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700 text-sm" readonly>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-medium text-gray-600 mb-1">Headers</h3>
+                    <div id="headersContainer">
+                        <div class="header-pair default-header">
+                            <input type="text" value="Authorization" class="w-full p-1 border border-gray-300 rounded-md shadow-sm bg-gray-100" readonly>
+                            <input type="text" value="Bearer oo9bbnic8y1x" class="w-full p-1 border border-gray-300 rounded-md shadow-sm bg-gray-100" readonly>
+                            <button type="button" onclick="removeHeader(this)" class="remove-header-btn" title="Remove Header (Not Recommended)">&times;</button>
+                        </div>
+                         <div class="header-pair default-header">
+                            <input type="text" value="Content-Type" class="w-full p-1 border border-gray-300 rounded-md shadow-sm bg-gray-100" readonly>
+                            <input type="text" value="application/json" class="w-full p-1 border border-gray-300 rounded-md shadow-sm bg-gray-100" readonly>
+                             <button type="button" onclick="removeHeader(this)" class="remove-header-btn" title="Remove Header (Not Recommended)">&times;</button>
+                        </div>
+                         </div>
+                    </div>
+            </div>
+        </details>
+
+
+        <div class="mb-4">
+            <label for="promptInput" class="block text-sm font-medium text-gray-700 mb-1">Enter your coding instruction:</label>
+            <textarea id="promptInput" name="promptInput" rows="5" placeholder="e.g., Write a Python function to calculate factorial." class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+        </div>
+
+         <div class="mb-4">
+             <label for="modelName" class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+             <input type="text" id="modelName" name="modelName" value="deepseek-ai/deepseek-coder-VERSION" placeholder="e.g., deepseek-ai/deepseek-coder-6.7b-instruct" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+             <p class="text-xs text-gray-500 mt-1">Replace VERSION with the specific DeepSeek Coder model (e.g., 6.7b-instruct).</p>
+         </div>
+
+         <div class="mb-6">
+            <label for="maxTokens" class="block text-sm font-medium text-gray-700 mb-1">Max Tokens (Optional)</label>
+            <input type="number" id="maxTokens" name="maxTokens" value="512" placeholder="e.g., 512" class="w-1/3 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+         </div>
+
+
+        <div class="mb-6 text-center">
+            <button id="sendRequestBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md shadow-md transition duration-150 ease-in-out">
+                Generate Code
+            </button>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Generated Code / Response</h2>
+             <div id="loadingIndicator" class="hidden text-center text-gray-500 my-4">
+                <svg class="animate-spin h-5 w-5 text-indigo-600 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating...
+            </div>
+            <div id="responseDisplay" class="bg-gray-100 border border-gray-300 rounded-md p-4 min-h-[150px]">
+                <span class="text-gray-500">Generated code will appear here...</span>
+            </div>
+             <div id="errorMessage" class="mt-2 text-red-600 text-sm hidden"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const endpointUrlInput = document.getElementById('endpointUrl');
+        const headersContainer = document.getElementById('headersContainer');
+        const promptInput = document.getElementById('promptInput');
+        const modelNameInput = document.getElementById('modelName');
+        const maxTokensInput = document.getElementById('maxTokens');
+        const sendRequestBtn = document.getElementById('sendRequestBtn');
+        const responseDisplay = document.getElementById('responseDisplay');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const initialResponsePlaceholder = '<span class="text-gray-500">Generated code will appear here...</span>'; // Store initial placeholder
+
+        // --- (Optional) Functions to add/remove custom headers if enabled ---
+        // function addHeader() {
+        //     const div = document.createElement('div');
+        //     div.className = 'header-pair';
+        //     div.innerHTML = `
+        //         <input type="text" placeholder="Header Name" class="w-full p-1 border border-gray-300 rounded-md shadow-sm">
+        //         <input type="text" placeholder="Header Value" class="w-full p-1 border border-gray-300 rounded-md shadow-sm">
+        //         <button type="button" onclick="removeHeader(this)" class="remove-header-btn" title="Remove Header">&times;</button>
+        //     `;
+        //     headersContainer.appendChild(div);
+        // }
+
+        function removeHeader(button) {
+             // Simple removal, add checks if needed (e.g., prevent removing defaults)
+            button.closest('.header-pair').remove();
+        }
+
+        // --- Event Listener for the Generate Code Button ---
+        sendRequestBtn.addEventListener('click', async () => {
+            const url = endpointUrlInput.value.trim();
+            const userPrompt = promptInput.value.trim();
+            const modelName = modelNameInput.value.trim();
+            const maxTokens = maxTokensInput.value ? parseInt(maxTokensInput.value, 10) : null; // Get max_tokens as integer or null
+
+            // --- Clear previous response and errors, reset styles ---
+            responseDisplay.innerHTML = ''; // Use innerHTML to clear potential span
+            responseDisplay.classList.remove('bg-gray-100', 'border', 'border-gray-300', 'p-4', 'border-red-500', 'border-2', 'bg-red-100', 'text-red-800'); // Remove placeholder/error styling
+            responseDisplay.classList.add('bg-gray-800', 'text-gray-100', 'p-4'); // Add code block styling
+            errorMessage.classList.add('hidden');
+            errorMessage.textContent = '';
+
+            // --- Basic validation ---
+            if (!userPrompt) {
+                errorMessage.textContent = 'Please enter a coding instruction.';
+                errorMessage.classList.remove('hidden');
+                promptInput.focus();
+                // Restore placeholder if request fails early
+                responseDisplay.innerHTML = initialResponsePlaceholder;
+                responseDisplay.classList.remove('bg-gray-800', 'text-gray-100');
+                responseDisplay.classList.add('bg-gray-100', 'border', 'border-gray-300', 'p-4');
+                return;
+            }
+             if (!modelName || modelName === "deepseek-ai/deepseek-coder-VERSION") {
+                errorMessage.textContent = 'Please specify a valid DeepSeek Coder model name.';
+                errorMessage.classList.remove('hidden');
+                modelNameInput.focus();
+                 responseDisplay.innerHTML = initialResponsePlaceholder;
+                responseDisplay.classList.remove('bg-gray-800', 'text-gray-100');
+                responseDisplay.classList.add('bg-gray-100', 'border', 'border-gray-300', 'p-4');
+                return;
+            }
+             if (!url) { // Should not happen with readonly field, but good practice
+                 errorMessage.textContent = 'Endpoint URL is missing.';
+                 errorMessage.classList.remove('hidden');
+                  responseDisplay.innerHTML = initialResponsePlaceholder;
+                responseDisplay.classList.remove('bg-gray-800', 'text-gray-100');
+                responseDisplay.classList.add('bg-gray-100', 'border', 'border-gray-300', 'p-4');
+                 return;
+             }
+
+            // Show loading indicator
+            loadingIndicator.classList.remove('hidden');
+            sendRequestBtn.disabled = true; // Disable button during request
+
+            // --- Collect headers (using pre-filled, potentially editable ones) ---
+            const headers = {};
+            const headerPairs = headersContainer.querySelectorAll('.header-pair');
+            headerPairs.forEach(pair => {
+                // Find the input elements within the pair
+                const keyInput = pair.querySelector('input:nth-child(1)');
+                const valueInput = pair.querySelector('input:nth-child(2)');
+                if (keyInput && valueInput) { // Check if inputs exist
+                    const key = keyInput.value.trim();
+                    const value = valueInput.value.trim();
+                    if (key) { // Only add header if key is not empty
+                        headers[key] = value;
+                    }
+                }
+            });
+
+
+            // --- Construct Request Body ---
+            // Using a common chat completion format. Adjust if DeepSeek uses a different structure.
+            const requestBody = {
+                model: modelName,
+                messages: [
+                    {
+                        role: "user",
+                        content: userPrompt
+                    }
+                    // You might add a system prompt here if needed:
+                    // {
+                    //     role: "system",
+                    //     content: "You are a helpful coding assistant."
+                    // }
+                ],
+                // Add max_tokens only if a valid number was provided
+                ...(maxTokens !== null && !isNaN(maxTokens) && maxTokens > 0 && { max_tokens: maxTokens })
+                // Add other parameters like temperature, top_p etc. if needed
+                // temperature: 0.7,
+                // top_p: 0.9
+            };
+
+            // --- Actual API Call using fetch ---
+            try {
+                const fetchOptions = {
+                    method: 'POST', // Hardcoded POST
+                    headers: headers, // Collected headers
+                    body: JSON.stringify(requestBody), // Stringify the constructed body
+                };
+
+                const response = await fetch(url, fetchOptions);
+                const responseData = await response.text(); // Get response as text first
+
+                // Prepare display text
+                let responseStatusText = `Status: ${response.status} ${response.statusText}\n\n`;
+                let formattedResponse = responseData; // Default to raw text
+
+                // Try to parse and format the response
+                let finalContent = '';
+                try {
+                    const parsedJson = JSON.parse(responseData);
+                    // Attempt to extract the main content from common response structures
+                    if (parsedJson.choices && parsedJson.choices.length > 0 && parsedJson.choices[0].message && parsedJson.choices[0].message.content) {
+                        finalContent = parsedJson.choices[0].message.content;
+                    } else if (parsedJson.text) { // Handle simpler text responses
+                         finalContent = parsedJson.text;
+                    } else {
+                         // If structure is unknown, pretty-print the whole JSON
+                         finalContent = JSON.stringify(parsedJson, null, 2);
+                    }
+                    // Add status text only if we successfully parsed and extracted/formatted
+                     formattedResponse = responseStatusText + finalContent;
+
+                } catch (e) {
+                    // If JSON parsing fails, display raw text with status
+                    console.warn("Response was not valid JSON or structure unknown:", e);
+                    formattedResponse = responseStatusText + responseData; // Show raw data + status
+                }
+
+                // Display status and formatted/extracted response
+                responseDisplay.textContent = formattedResponse;
+
+                // Add specific styling based on response status
+                if (!response.ok) {
+                    responseDisplay.classList.add('border-red-500', 'border-2'); // Example error styling
+                } else {
+                     responseDisplay.classList.remove('border-red-500', 'border-2');
+                }
+
+            } catch (error) {
+                 // Display network errors or fetch-related issues
+                 errorMessage.textContent = `Error: ${error.message}`;
+                 errorMessage.classList.remove('hidden');
+                 // Display error in the response area as well
+                 responseDisplay.textContent = `Request failed.\n\nError details: ${error.message}`;
+                 // Apply error styling
+                 responseDisplay.classList.remove('bg-gray-800', 'text-gray-100');
+                 responseDisplay.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-300');
+
+            } finally {
+                 // Hide loading indicator and re-enable button
+                 loadingIndicator.classList.add('hidden');
+                 sendRequestBtn.disabled = false;
+            }
+            // --- End Actual API Call ---
+
+        });
+
+        // Set initial state for response display on load
+        document.addEventListener('DOMContentLoaded', () => {
+             responseDisplay.innerHTML = initialResponsePlaceholder;
+             responseDisplay.classList.add('bg-gray-100', 'border', 'border-gray-300', 'p-4');
+             responseDisplay.classList.remove('bg-gray-800', 'text-gray-100'); // Ensure code block style isn't initially applied
+        });
+
+    </script>
+
+</body>
+</html>
